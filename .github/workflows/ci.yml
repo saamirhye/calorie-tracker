@@ -44,4 +44,10 @@ jobs:
           for file in db/migrations/*.sql; do
             psql -h localhost -U tracker -d tracker -v ON_ERROR_STOP=1 -f "$file"
           done
+      - name: Load the seed data and run the daily totals query
+        working-directory: .
+        run: |
+          for file in db/seed_foods_afcd.sql db/seed.sql db/queries.sql; do
+            psql -h localhost -U tracker -d tracker -v ON_ERROR_STOP=1 -f "$file"
+          done
       - run: uv run pytest -q
