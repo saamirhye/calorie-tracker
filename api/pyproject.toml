@@ -13,6 +13,8 @@ dev = [
   "pytest>=8",
   "pyright>=1.1",
   "httpx2>=2.15.1",
+  "ruff>=0.17.1",
+  "pre-commit>=4.7.0",
 ]
 
 [tool.pytest.ini_options]
@@ -22,3 +24,9 @@ pythonpath = ["."]
 [tool.pyright]
 include = ["app", "tests"]
 typeCheckingMode = "strict"
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
