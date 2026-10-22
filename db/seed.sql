@@ -6,6 +6,12 @@
 INSERT INTO users (id, username, timezone) VALUES
     ('00000000-0000-0000-0000-000000000001', 'Greg', 'Australia/Sydney');
 
+INSERT INTO targets (user_id, target_type, target_value, start_date, end_date)
+SELECT u.id, 'calories', 2200, '2026-10-18'::date, NULL
+FROM users u
+WHERE u.username = 'Greg'
+ON CONFLICT (user_id, target_type, start_date) WHERE deleted_at IS NULL DO NOTHING;
+
 INSERT INTO entries (user_id, food_id, food_name, serving_unit, serving_size,
                      calories, protein, carbs, fat, servings, consumed_at, timezone)
 SELECT u.id, f.id, f.name, f.serving_unit, f.serving_size,
