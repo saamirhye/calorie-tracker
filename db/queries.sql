@@ -77,6 +77,7 @@ order by e.consumed_at;
 
 
 -- Remaining targets
+-- Add `explain (analyze, buffers)` in front to see the plan. Timings are in db/perf/results.md.
 with params as (
   select u.id as user_id, '2026-10-18'::date as week_start
   from users u
@@ -88,6 +89,11 @@ with params as (
   from entries e
   join params p on e.user_id = p.user_id
   where e.deleted_at is null
+        -- Compare the raw column so entries_user_consumed_at_idx can be used.
+        -- The window is a day wider each side because days are local and
+        -- consumed_at is UTC. The join to days trims the extras.
+        and e.consumed_at >= (week_start - 1)
+        and e.consumed_at < (week_start + 8)
 )
 , daily as (
   select day,
