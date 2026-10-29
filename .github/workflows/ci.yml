@@ -28,6 +28,7 @@ jobs:
     env:
       PGPASSWORD: ci-password
       DATABASE_URL: postgresql://tracker:ci-password@localhost:5432/tracker
+      TEST_DATABASE_URL: postgresql://tracker:ci-password@localhost:5432/tracker
     defaults:
       run:
         working-directory: api
