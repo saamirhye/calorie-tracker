@@ -4,11 +4,11 @@ A calorie and macro tracker built to learn PostgreSQL, Python and React, and to 
 
 ## Layout
 
-| Path | Contents |
-|---|---|
-| `api/` | FastAPI service, tests, type checking (uv, pytest, pyright) |
-| `db/migrations/` | Numbered plain SQL files. Postgres runs them on first start |
-| `docker-compose.yml` | Postgres 16 and the API |
+| Path                 | Contents                                                    |
+| -------------------- | ----------------------------------------------------------- |
+| `api/`               | FastAPI service, tests, type checking (uv, pytest, pyright) |
+| `db/migrations/`     | Numbered plain SQL files, applied by the `migrate` service  |
+| `docker-compose.yml` | Postgres 16, the migrate step and the API                   |
 
 ## Run
 
@@ -19,8 +19,12 @@ A calorie and macro tracker built to learn PostgreSQL, Python and React, and to 
 ## Develop the API without Docker
 
 ```bash
+docker compose up -d db
 cd api
 uv sync
+export DATABASE_URL=postgresql://tracker:change-me@localhost:5432/tracker
+export TEST_DATABASE_URL=$DATABASE_URL
+uv run python -m app.migrate
 uv run pytest
 uv run pyright
 uv run uvicorn app.main:app --reload
@@ -29,6 +33,8 @@ uv run uvicorn app.main:app --reload
 ## Data
 
 `db/seed_foods_afcd.sql` loads 30 generic foods from the Australian Food Composition Database, Release 3, published by Food Standards Australia New Zealand (FSANZ). Values are per 100 g. Check FSANZ's copyright and licence terms before redistributing the data. `db/seed.sql` adds a test user and entries for development. `db/queries.sql` holds the SQL for the app's reports.
+
+`docker compose down -v` deletes the database, so reload the seed data afterwards.
 
 Load the seed data:
 
