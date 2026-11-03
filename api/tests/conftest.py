@@ -6,6 +6,8 @@ import psycopg
 import pytest
 from psycopg import sql
 
+from app.migrate import main
+
 
 @pytest.fixture
 def db_url() -> Iterator[str]:
@@ -19,3 +21,10 @@ def db_url() -> Iterator[str]:
         base, _, _ = admin_url.rpartition("/")
         yield f"{base}/{name}"
         admin.execute(sql.SQL("DROP DATABASE {} WITH (FORCE)").format(sql.Identifier(name)))
+
+
+@pytest.fixture
+def migrated_db_url(db_url: str, monkeypatch: pytest.MonkeyPatch) -> str:
+    monkeypatch.setenv("DATABASE_URL", db_url)
+    main()
+    return db_url

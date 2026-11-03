@@ -15,6 +15,7 @@ A calorie and macro tracker built to learn PostgreSQL, Python and React, and to 
 1. Copy `.env.example` to `.env` and change the password.
 2. Start the stack: `docker compose up --build`
 3. Check it: `curl localhost:8000/v1/health`
+4. List foods: `curl localhost:8000/v1/foods`. Returns the public foods and the current user's own, sorted by name. Until auth exists, every request acts as the seed user (`00000000-0000-0000-0000-000000000001`), so with `db/seed.sql` loaded their private foods appear too.
 
 ## Develop the API without Docker
 
