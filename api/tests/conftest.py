@@ -6,6 +6,7 @@ import psycopg
 import pytest
 from psycopg import sql
 
+from app.deps import current_user_id
 from app.migrate import main
 
 
@@ -28,3 +29,9 @@ def migrated_db_url(db_url: str, monkeypatch: pytest.MonkeyPatch) -> str:
     monkeypatch.setenv("DATABASE_URL", db_url)
     main()
     return db_url
+
+
+@pytest.fixture
+def stub_user(migrated_db_url: str) -> None:
+    with psycopg.connect(migrated_db_url) as conn:
+        conn.execute("INSERT INTO users (id, username) VALUES (%s, 'stub')", (current_user_id(),))

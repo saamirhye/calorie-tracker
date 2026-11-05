@@ -18,6 +18,7 @@ A calorie and macro tracker built to learn PostgreSQL, Python and React, and to 
 4. List foods: `curl localhost:8000/v1/foods`. Returns the public foods and the current user's own, sorted by name. Until auth exists, every request acts as the seed user (`00000000-0000-0000-0000-000000000001`), so with `db/seed.sql` loaded their private foods appear too.
 5. Load `db/seed.sql` once (`docker exec -i calorie-tracker-db-1 psql -U tracker -d tracker < db/seed.sql`), because the request acts as the seed user and the insert fails with a 500 if that user row doesn't exist.
 6. Create a food: `curl -X POST localhost:8000/v1/foods -H 'content-type: application/json' -d '{"name":"Banana","serving_unit":"piece","serving_size":1,"calories":105,"protein":1.3,"carbs":27,"fat":0.4}'`. Returns `201` and the new food, saved as a private food for the current user.
+7. Log an entry: `curl -X POST localhost:8000/v1/entries -H 'content-type: application/json' -d '{"food_id":"<id from GET /v1/foods>","servings":2,"consumed_at":"2026-11-05T12:00:00+11:00","timezone":"Australia/Sydney"}'`. Returns `201` and the entry, with the food's nutrition copied at that moment. Returns `404` if the food doesn't exist or is another user's private food.
 
 ## Develop the API without Docker
 
@@ -48,4 +49,4 @@ docker exec -i calorie-tracker-db-1 psql -U tracker -d tracker < db/seed.sql
 
 ## Status
 
-Scaffold only. The schema, queries, endpoints and front end are written by hand as part of the learning plan.
+Built and tested: the schema, `GET` and `POST /v1/foods`, and `POST /v1/entries`. Next: the daily summary endpoint, then the React front end. The code is written by hand as part of the learning plan.
