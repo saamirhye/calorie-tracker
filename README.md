@@ -16,6 +16,8 @@ A calorie and macro tracker built to learn PostgreSQL, Python and React, and to 
 2. Start the stack: `docker compose up --build`
 3. Check it: `curl localhost:8000/v1/health`
 4. List foods: `curl localhost:8000/v1/foods`. Returns the public foods and the current user's own, sorted by name. Until auth exists, every request acts as the seed user (`00000000-0000-0000-0000-000000000001`), so with `db/seed.sql` loaded their private foods appear too.
+5. Load `db/seed.sql` once (`docker exec -i calorie-tracker-db-1 psql -U tracker -d tracker < db/seed.sql`), because the request acts as the seed user and the insert fails with a 500 if that user row doesn't exist.
+6. Create a food: `curl -X POST localhost:8000/v1/foods -H 'content-type: application/json' -d '{"name":"Banana","serving_unit":"piece","serving_size":1,"calories":105,"protein":1.3,"carbs":27,"fat":0.4}'`. Returns `201` and the new food, saved as a private food for the current user.
 
 ## Develop the API without Docker
 
