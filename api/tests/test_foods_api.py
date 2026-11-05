@@ -18,12 +18,6 @@ VALID_FOOD = {
 }
 
 
-@pytest.fixture
-def stub_user(migrated_db_url: str) -> None:
-    with psycopg.connect(migrated_db_url) as conn:
-        conn.execute("INSERT INTO users (id, username) VALUES (%s, 'stub')", (current_user_id(),))
-
-
 def test_get_foods_returns_public_foods(migrated_db_url: str) -> None:
     with psycopg.connect(migrated_db_url) as conn:
         conn.execute(
