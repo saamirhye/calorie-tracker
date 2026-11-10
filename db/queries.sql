@@ -15,12 +15,12 @@ with logged as (
     group by tracked_day
 )
 select to_char(tracked_day, 'FMDD Mon') as day,
-       entries,
-       round(kcal, 1) as k_cal,
-       round(sum(kcal) over (order by tracked_day), 1) as run_kcal,
-       round(sum(protein) over (order by tracked_day), 1) as run_protein,
-       round(sum(carbs) over (order by tracked_day), 1) as run_carbs,
-       round(sum(fats) over (order by tracked_day), 1) as run_fats
+        entries,
+        round(kcal, 1) as k_cal,
+        round(sum(kcal) over (order by tracked_day), 1) as run_kcal,
+        round(sum(protein) over (order by tracked_day), 1) as run_protein,
+        round(sum(carbs) over (order by tracked_day), 1) as run_carbs,
+        round(sum(fats) over (order by tracked_day), 1) as run_fats
 from daily
 order by tracked_day;
 
