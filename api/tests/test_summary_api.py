@@ -2,48 +2,12 @@ import uuid
 
 import psycopg
 import pytest
+from conftest import insert_entry
 from fastapi.testclient import TestClient
 
-from app.deps import current_user_id
 from app.main import app
 
 client = TestClient(app)
-
-
-def insert_entry(
-    conn: psycopg.Connection,
-    *,
-    calories: int,
-    protein: float,
-    carbs: float,
-    fat: float,
-    servings: float,
-    consumed_at: str,
-    timezone: str = "Australia/Sydney",
-    user_id: uuid.UUID | None = None,
-    deleted_at: str | None = None,
-) -> None:
-    conn.execute(
-        """
-        INSERT INTO entries (user_id, food_name, serving_unit, serving_size,
-                              calories, protein, carbs, fat, servings, consumed_at,
-                              timezone, deleted_at)
-        VALUES (%(user_id)s, 'Banana', 'piece', 1,
-                %(calories)s, %(protein)s, %(carbs)s, %(fat)s, %(servings)s,
-                %(consumed_at)s, %(timezone)s, %(deleted_at)s)
-        """,
-        {
-            "user_id": user_id or current_user_id(),
-            "calories": calories,
-            "protein": protein,
-            "carbs": carbs,
-            "fat": fat,
-            "servings": servings,
-            "consumed_at": consumed_at,
-            "timezone": timezone,
-            "deleted_at": deleted_at,
-        },
-    )
 
 
 def test_get_summary_totals_the_days_entries(migrated_db_url: str, stub_user: None) -> None:

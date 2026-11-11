@@ -2,6 +2,7 @@ import uuid
 
 import psycopg
 import pytest
+from conftest import insert_entry
 from fastapi.testclient import TestClient
 
 from app.deps import current_user_id
@@ -128,3 +129,117 @@ def test_post_entry_rejects_invalid_input(
 
     assert response.status_code == 422
     assert count_entries(migrated_db_url) == 0
+
+
+def test_list_entries_returns_newest_first(migrated_db_url: str, stub_user: None) -> None:
+    with psycopg.connect(migrated_db_url) as conn:
+        first_food_id = insert_food(conn, visibility="private", created_by=current_user_id())
+        second_food_id = insert_food(conn, visibility="private", created_by=current_user_id())
+
+        insert_entry(conn, food_id=first_food_id, consumed_at="2026-11-05T08:00:00+11:00")
+        insert_entry(conn, food_id=second_food_id, consumed_at="2026-11-05T09:00:00+11:00")
+
+    response = client.get("/v1/entries", params={"date": "2026-11-05"})
+    assert response.status_code == 200
+
+    items = response.json()
+    assert items[0]["food_id"] == str(second_food_id)
+    assert items[1]["food_id"] == str(first_food_id)
+
+
+def test_list_entries_empty_day_returns_empty_list(stub_user: None) -> None:
+    response = client.get("/v1/entries", params={"date": "2026-11-01"})
+    assert response.status_code == 200
+    items = response.json()
+    assert items == []
+
+
+def test_list_entries_uses_each_entrys_timezone(migrated_db_url: str, stub_user: None) -> None:
+    with psycopg.connect(migrated_db_url) as conn:
+        nassau_food_id = insert_food(conn, visibility="private", created_by=current_user_id())
+        sydney_food_id = insert_food(conn, visibility="private", created_by=current_user_id())
+
+        insert_entry(
+            conn,
+            food_id=nassau_food_id,
+            consumed_at="2026-11-05T08:00:00+11:00",
+            timezone="America/Nassau",
+        )
+        insert_entry(
+            conn,
+            food_id=sydney_food_id,
+            consumed_at="2026-11-05T09:00:00+11:00",
+        )
+
+    response = client.get("/v1/entries", params={"date": "2026-11-05"})
+    assert response.status_code == 200
+    items = response.json()
+    assert len(items) == 1
+    assert items[0]["food_id"] == str(sydney_food_id)
+
+    response = client.get("/v1/entries", params={"date": "2026-11-04"})
+    assert response.status_code == 200
+    items = response.json()
+    assert len(items) == 1
+    assert items[0]["food_id"] == str(nassau_food_id)
+
+
+def test_list_entries_ignores_other_days_and_other_users(
+    migrated_db_url: str, stub_user: None
+) -> None:
+    other_user_id = uuid.uuid4()
+    with psycopg.connect(migrated_db_url) as conn:
+        my_first_food_id = insert_food(conn, visibility="private", created_by=current_user_id())
+        my_second_food_id = insert_food(conn, visibility="private", created_by=current_user_id())
+        insert_entry(conn, food_id=my_first_food_id, consumed_at="2026-11-05T09:00:00+11:00")
+        insert_entry(conn, food_id=my_second_food_id, consumed_at="2026-11-06T09:00:00+11:00")
+
+        conn.execute("INSERT INTO users (id, username) VALUES (%s, 'other')", (other_user_id,))
+        other_users_food_id = insert_food(conn, visibility="private", created_by=other_user_id)
+        insert_entry(
+            conn,
+            food_id=other_users_food_id,
+            consumed_at="2026-11-06T09:00:00+11:00",
+            user_id=other_user_id,
+        )
+
+    response = client.get("/v1/entries", params={"date": "2026-11-06"})
+    assert response.status_code == 200
+
+    items = response.json()
+    assert len(items) == 1
+    assert items[0]["food_id"] == str(my_second_food_id)
+
+
+def test_list_entries_ignores_deleted_entries(migrated_db_url: str, stub_user: None) -> None:
+    with psycopg.connect(migrated_db_url) as conn:
+        my_first_food_id = insert_food(conn, visibility="private", created_by=current_user_id())
+        my_second_food_id = insert_food(conn, visibility="private", created_by=current_user_id())
+        insert_entry(conn, food_id=my_first_food_id, consumed_at="2026-11-05T09:00:00+11:00")
+        insert_entry(
+            conn,
+            food_id=my_second_food_id,
+            consumed_at="2026-11-05T09:00:00+11:00",
+            deleted_at="2026-11-05T10:00:00+11:00",
+        )
+
+    response = client.get("/v1/entries", params={"date": "2026-11-05"})
+    assert response.status_code == 200
+
+    items = response.json()
+    assert len(items) == 1
+    assert items[0]["food_id"] == str(my_first_food_id)
+
+
+@pytest.mark.parametrize(
+    "params",
+    [
+        pytest.param({}, id="missing"),
+        pytest.param({"date": "not-a-date"}, id="not-a-date"),
+        pytest.param({"date": "2026-13-01"}, id="month-13"),
+    ],
+)
+def test_list_entries_rejects_bad_date(migrated_db_url: str, params: dict[str, str]) -> None:
+    response = client.get("/v1/entries", params=params)
+
+    assert response.status_code == 422
