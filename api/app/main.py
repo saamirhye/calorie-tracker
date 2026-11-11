@@ -6,7 +6,7 @@ import psycopg
 from fastapi import Depends, FastAPI, HTTPException, Query
 
 from app.deps import current_user_id, get_conn
-from app.entries import Entry, EntryCreate, create_entry
+from app.entries import Entry, EntryCreate, create_entry, list_entries
 from app.foods import Food, FoodCreate, create_food, list_foods
 from app.summary import DaySummary, get_day_summary
 
@@ -54,8 +54,17 @@ def post_entry(
 
 @app.get("/v1/summary")
 def get_summary(
-    day: Annotated[datetime.date, Query(alias="date")],
     conn: Annotated[psycopg.Connection, Depends(get_conn)],
     user_id: Annotated[uuid.UUID, Depends(current_user_id)],
+    day: Annotated[datetime.date, Query(alias="date")],
 ) -> DaySummary:
     return get_day_summary(conn, user_id, day)
+
+
+@app.get("/v1/entries")
+def get_entries(
+    conn: Annotated[psycopg.Connection, Depends(get_conn)],
+    user_id: Annotated[uuid.UUID, Depends(current_user_id)],
+    day: Annotated[datetime.date, Query(alias="date")],
+) -> list[Entry]:
+    return list_entries(conn, user_id, day)

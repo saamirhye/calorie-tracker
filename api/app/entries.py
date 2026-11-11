@@ -58,3 +58,19 @@ def create_entry(conn: psycopg.Connection, user_id: uuid.UUID, data: EntryCreate
             {**data.model_dump(), "user_id": user_id},
         )
         return cur.fetchone()
+
+
+def list_entries(conn: psycopg.Connection, user_id: uuid.UUID, day: datetime.date) -> list[Entry]:
+    with conn.cursor(row_factory=class_row(Entry)) as cur:
+        cur.execute(
+            """
+            SELECT id, food_id, food_name, serving_unit, serving_size,
+            calories, protein, carbs, fat, servings, consumed_at, timezone
+            FROM entries
+            WHERE user_id = %(user_id)s AND deleted_at IS NULL
+            AND (consumed_at AT TIME ZONE timezone)::date = %(day)s
+            ORDER BY consumed_at DESC
+            """,
+            {"user_id": user_id, "day": day},
+        )
+        return cur.fetchall()
