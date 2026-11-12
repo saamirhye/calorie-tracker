@@ -1,7 +1,7 @@
 -- Large, repeatable data set for measuring query performance.
 -- Adds 20 users and about 52,000 entries (4 per user per day, 1 Jan 2025 to 21 Oct 2026).
 -- About 2% of entries are soft deleted. Every fifth user is in New York time.
--- Run on a performance database only, after the migration and seed_foods_afcd.sql.
+-- Run on a performance database only, after the migration and seed_foods.sql.
 
 SELECT setseed(0.42);
 
@@ -14,7 +14,7 @@ WITH numbered_foods AS (
     SELECT id, name, serving_unit, serving_size, calories, protein, carbs, fat,
            row_number() OVER (ORDER BY external_id) AS n
     FROM foods
-    WHERE source = 'afcd'
+    WHERE source = 'sample'
 )
 , slots AS (
     SELECT u.id AS user_id, u.timezone, d::date AS day, k
@@ -25,7 +25,7 @@ WITH numbered_foods AS (
 )
 , picks AS (
     SELECT s.*,
-           1 + floor(random() * 30)::int AS food_n,
+           1 + floor(random() * (SELECT count(*) FROM numbered_foods))::int AS food_n,
            round((0.5 + random() * 2.5)::numeric * 4) / 4 AS servings,
            random() AS jitter,
            random() < 0.02 AS is_deleted

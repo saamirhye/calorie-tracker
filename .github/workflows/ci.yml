@@ -28,6 +28,7 @@ jobs:
     env:
       PGPASSWORD: ci-password
       DATABASE_URL: postgresql://tracker:ci-password@localhost:5432/tracker
+      TEST_DATABASE_URL: postgresql://tracker:ci-password@localhost:5432/tracker
     defaults:
       run:
         working-directory: api
@@ -38,16 +39,12 @@ jobs:
       - run: uv run ruff check .
       - run: uv run ruff format --check .
       - run: uv run pyright
-      - name: Apply migrations to a fresh database
-        working-directory: .
-        run: |
-          for file in db/migrations/*.sql; do
-            psql -h localhost -U tracker -d tracker -v ON_ERROR_STOP=1 -f "$file"
-          done
+      - name: Apply migrations
+        run: uv run python -m app.migrate
       - name: Load the seed data and run the daily totals query
         working-directory: .
         run: |
-          for file in db/seed_foods_afcd.sql db/seed.sql db/queries.sql; do
+          for file in db/seed_foods.sql db/seed.sql db/queries.sql; do
             psql -h localhost -U tracker -d tracker -v ON_ERROR_STOP=1 -f "$file"
           done
       - run: uv run pytest -q
