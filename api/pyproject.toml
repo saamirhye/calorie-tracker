@@ -13,8 +13,8 @@ dependencies = [
 dev = [
   "pytest>=8",
   "pyright>=1.1",
-  "httpx2>=2.15.1",
-  "ruff>=0.17.3",
+  "httpx2>=2.16.0",
+  "ruff>=0.17.1",
   "pre-commit>=4.7.0",
 ]
 
