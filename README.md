@@ -38,14 +38,14 @@ uv run uvicorn app.main:app --reload
 
 ## Data
 
-`db/seed_foods_afcd.sql` loads 30 generic foods from the Australian Food Composition Database, Release 3, published by Food Standards Australia New Zealand (FSANZ). Values are per 100 g. Check FSANZ's copyright and licence terms before redistributing the data. `db/seed.sql` adds a test user and entries for development. `db/queries.sql` holds the SQL for the app's reports.
+`db/seed_foods.sql` loads 12 sample foods with rounded, approximate values per 100 g. They are placeholders, not reference data. `db/seed.sql` adds a test user and entries for development. `db/queries.sql` holds the SQL for the app's reports.
 
 `docker compose down -v` deletes the database, so reload the seed data afterwards.
 
 Load the seed data:
 
 ```bash
-docker exec -i calorie-tracker-db-1 psql -U tracker -d tracker < db/seed_foods_afcd.sql
+docker exec -i calorie-tracker-db-1 psql -U tracker -d tracker < db/seed_foods.sql
 docker exec -i calorie-tracker-db-1 psql -U tracker -d tracker < db/seed.sql
 ```
 
